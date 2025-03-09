@@ -83,3 +83,34 @@ export async function POST(request) {
     );
   }
 }
+
+export async function DELETE(request, { params }) {
+  try {
+    await connectToDB();
+    const session = await auth();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { postId } = await params;
+
+    const post = await Post.findById(postId);
+
+    if (!post) {
+      return NextResponse.json({ error: "Post not found" }, { status: 404 });
+    }
+
+    await Post.findByIdAndDelete(postId);
+
+    return NextResponse.json(
+      { message: "Post deleted successfully" },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Post deletion error:", error);
+    return NextResponse.json(
+      { error: "Failed to delete post" },
+      { status: 500 }
+    );
+  }
+}

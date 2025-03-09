@@ -1,24 +1,22 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { formatDistanceToNow } from "date-fns";
-import {
-  FaRegHeart,
-  FaHeart,
-  FaRegComment,
-  FaRegShareSquare,
-} from "react-icons/fa";
 import CommentModal from "./CommentModal";
 import { useSession } from "next-auth/react";
+import ActionButtons from "./ActionButtons";
+import { useRouter } from "next/navigation";
 
 const PostCard = ({ post }) => {
   const { data: session } = useSession();
+  const router = useRouter();
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [commentCount, setCommentCount] = useState(post.commentCount || 0);
   const [likeCount, setLikeCount] = useState(post.likeCount || 0);
   const [userHasLiked, setUserHasLiked] = useState(post.userHasLiked || false);
   const [isLikeLoading, setIsLikeLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Fetch likes when component mounts
   useEffect(() => {
@@ -73,6 +71,33 @@ const PostCard = ({ post }) => {
   // Function to handle when a new comment is added
   const handleCommentAdded = () => {
     setCommentCount((prevCount) => prevCount + 1);
+  };
+
+  // Function to open delete confirmation modal
+  const handleDeleteClick = () => {
+    setIsDeleteModalOpen(true);
+  };
+
+  // Function to confirm and execute post deletion
+  const confirmDelete = async () => {
+    try {
+      setIsDeleting(true);
+      const response = await fetch(`/api/posts/${post._id}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        // Close the modal and refresh the page to update the posts list
+        setIsDeleteModalOpen(false);
+        router.refresh();
+      } else {
+        console.error("Failed to delete post:", await response.text());
+      }
+    } catch (error) {
+      console.error("Error deleting post:", error);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -134,43 +159,62 @@ const PostCard = ({ post }) => {
         )}
 
         {/* Action Buttons */}
-        <div className="flex justify-start space-x-4 mt-4 card-actions">
-          <button
-            className="btn btn-ghost btn-sm"
-            onClick={handleLikeClick}
-            disabled={isLikeLoading}
-          >
-            {userHasLiked ? (
-              <FaHeart className="w-5 h-5 text-red-500" />
-            ) : (
-              <FaRegHeart className="w-5 h-5" />
-            )}
-            <span className="ml-1">
-              {userHasLiked ? "Liked" : "Like"}{" "}
-              {likeCount > 0 && `(${likeCount})`}
-            </span>
-          </button>
-          <button className="btn btn-ghost btn-sm" onClick={handleCommentClick}>
-            <FaRegComment className="w-5 h-5" />
-            <span className="ml-1">
-              Comment {commentCount > 0 && `(${commentCount})`}
-            </span>
-          </button>
-          <button className="btn btn-ghost btn-sm">
-            <FaRegShareSquare className="w-5 h-5" />
-            <span className="ml-1">Share</span>
-          </button>
-        </div>
-      </div>
+        <ActionButtons
+          handleLikeClick={handleLikeClick}
+          handleCommentClick={handleCommentClick}
+          handleDeleteClick={handleDeleteClick}
+          userHasLiked={userHasLiked}
+          isLikeLoading={isLikeLoading}
+          likeCount={likeCount}
+          commentCount={commentCount}
+          isAuthor={session?.user?.id === post.user._id}
+        />
 
-      {/* Comment Modal */}
-      <CommentModal
-        isOpen={isCommentModalOpen}
-        onClose={() => setIsCommentModalOpen(false)}
-        postId={post._id}
-        session={session}
-        onCommentAdded={handleCommentAdded}
-      />
+        {/* Comment Modal */}
+        <CommentModal
+          isOpen={isCommentModalOpen}
+          onClose={() => setIsCommentModalOpen(false)}
+          postId={post._id}
+          session={session}
+          onCommentAdded={handleCommentAdded}
+        />
+
+        {/* Delete Confirmation Modal */}
+        {isDeleteModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="modal-box">
+              <h3 className="font-bold text-lg">Confirm Deletion</h3>
+              <p className="py-4">
+                Are you sure you want to delete this post? This action cannot be
+                undone.
+              </p>
+              <div className="modal-action">
+                <button
+                  className="btn btn-outline"
+                  onClick={() => setIsDeleteModalOpen(false)}
+                  disabled={isDeleting}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="btn btn-error"
+                  onClick={confirmDelete}
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? (
+                    <>
+                      <span className="loading loading-spinner loading-xs"></span>
+                      Deleting...
+                    </>
+                  ) : (
+                    "Delete"
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

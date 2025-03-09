@@ -8,7 +8,7 @@ import Like from "@/db/models/Like";
 export async function GET(request, { params }) {
   try {
     await connectToDB();
-    const { postId } = params;
+    const { postId } = await params;
 
     // Count total likes
     const likeCount = await Like.countDocuments({ post: postId });
