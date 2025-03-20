@@ -4,16 +4,22 @@ import Link from "next/link";
 import Image from "next/image";
 import { FaUser, FaSignOutAlt, FaPlus } from "react-icons/fa";
 import ThemeToggle from "./ThemeToggle";
+import { useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import PostModal from "./PostModal";
 
 const SideNavbar = ({ refreshPosts }) => {
   const { data: session, status } = useSession();
   const [isOpen, setIsOpen] = useState(false);
-
+  const router = useRouter();
   const handleCloseModal = () => {
     setIsOpen(false);
     if (refreshPosts) refreshPosts();
+  };
+
+  const handleSignOut = async () => {
+    await signOut({ redirect: false }); // Disable server-side redirect
+    router.push("/"); // Manually redirect client-side
   };
 
   if (status === "loading") {
@@ -77,7 +83,7 @@ const SideNavbar = ({ refreshPosts }) => {
           {/* Logout Button */}
           <li>
             <button
-              onClick={() => signOut({ redirectTo: "/" })}
+              onClick={handleSignOut}
               className="flex justify-center p-2 hover:bg-base-400 rounded w-full text-left"
             >
               <FaSignOutAlt className="mr-2" size={20} />

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from "react"; // Changed useState to useEffect for the initial fetch
 import Image from "next/image";
 import { formatDistanceToNow } from "date-fns";
 
@@ -8,7 +8,7 @@ const CommentModal = ({ isOpen, onClose, postId, session, onCommentAdded }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingComments, setIsLoadingComments] = useState(true);
 
-  // Fetch comments when modal opens
+  // Fetch comments when modal opens - FIXED: Changed useState to useEffect
   useEffect(() => {
     if (isOpen && postId) {
       fetchComments();
@@ -18,13 +18,19 @@ const CommentModal = ({ isOpen, onClose, postId, session, onCommentAdded }) => {
   const fetchComments = async () => {
     try {
       setIsLoadingComments(true);
+      console.log("Fetching comments for post:", postId); // Add logging
       const response = await fetch(`/api/posts/${postId}/comments`);
+      console.log("Comments API response status:", response.status); // Add logging
+
       if (response.ok) {
         const data = await response.json();
+        console.log("Comments data:", data); // Add logging
         setComments(data);
+      } else {
+        console.error("Failed to fetch comments:", await response.text());
       }
     } catch (error) {
-      console.error("Failed to fetch comments:", error);
+      console.error("Error fetching comments:", error);
     } finally {
       setIsLoadingComments(false);
     }
@@ -49,6 +55,8 @@ const CommentModal = ({ isOpen, onClose, postId, session, onCommentAdded }) => {
         setComments([newComment, ...comments]);
         setCommentText("");
         if (onCommentAdded) onCommentAdded();
+      } else {
+        console.error("Failed to post comment:", await response.text());
       }
     } catch (error) {
       console.error("Failed to post comment:", error);
@@ -109,6 +117,7 @@ const CommentModal = ({ isOpen, onClose, postId, session, onCommentAdded }) => {
           {isLoadingComments ? (
             <div className="flex justify-center p-4">
               <span className="loading loading-spinner"></span>
+              <span className="ml-2">Loading comments...</span>
             </div>
           ) : comments.length > 0 ? (
             <div className="space-y-4">

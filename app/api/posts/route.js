@@ -39,6 +39,7 @@ export async function GET() {
   }
 }
 
+// In the POST function where you create a new post
 export async function POST(request) {
   try {
     await connectToDB();
@@ -50,6 +51,9 @@ export async function POST(request) {
     const formData = await request.formData();
     const text = formData.get("text");
     const fileEntries = formData.getAll("files");
+
+    // Get the user info from session
+    const userId = session.user.id;
 
     // Handle file uploads
     const fileUrls = [];
@@ -64,15 +68,21 @@ export async function POST(request) {
     }
 
     const post = await Post.create({
-      user: session.user.id,
+      user: userId,
       text: text,
       files: fileUrls,
     });
 
-    const populatedPost = await Post.findById(post._id).populate(
-      "user",
-      "name email image"
-    );
+    // Populate with current session user data
+    const populatedPost = {
+      ...post.toObject(),
+      user: {
+        _id: userId,
+        name: session.user.name,
+        email: session.user.email,
+        image: session.user.image,
+      },
+    };
 
     return NextResponse.json(populatedPost);
   } catch (error) {
@@ -98,6 +108,10 @@ export async function DELETE(request, { params }) {
 
     if (!post) {
       return NextResponse.json({ error: "Post not found" }, { status: 404 });
+    }
+
+    if (post.user.toString() !== session.user.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
     await Post.findByIdAndDelete(postId);

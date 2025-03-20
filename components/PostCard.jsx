@@ -1,4 +1,5 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { formatDistanceToNow } from "date-fns";
@@ -17,6 +18,9 @@ const PostCard = ({ post }) => {
   const [userHasLiked, setUserHasLiked] = useState(post.userHasLiked || false);
   const [isLikeLoading, setIsLikeLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Check if current user is the post author
+  const isAuthor = session?.user?.id === post.user._id;
 
   // Fetch likes when component mounts
   useEffect(() => {
@@ -75,26 +79,46 @@ const PostCard = ({ post }) => {
 
   // Function to open delete confirmation modal
   const handleDeleteClick = () => {
+    // Only allow post author to delete
+    if (!isAuthor) return;
     setIsDeleteModalOpen(true);
   };
 
   // Function to confirm and execute post deletion
   const confirmDelete = async () => {
+    // Double-check that user is the author before deleting
+    if (!isAuthor) {
+      setIsDeleteModalOpen(false);
+      return;
+    }
+
     try {
       setIsDeleting(true);
       const response = await fetch(`/api/posts/${post._id}`, {
         method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
 
       if (response.ok) {
-        // Close the modal and refresh the page to update the posts list
+        // Close the modal
         setIsDeleteModalOpen(false);
-        router.refresh();
+
+        // Dispatch a custom event to refresh posts instead of using router.refresh()
+        const event = new Event("new-post-created");
+        window.dispatchEvent(event);
       } else {
-        console.error("Failed to delete post:", await response.text());
+        const errorData = await response.json();
+        console.error(
+          "Failed to delete post:",
+          errorData.error || "Unknown error"
+        );
+        alert(`Error: ${errorData.error || "Failed to delete post"}`);
       }
     } catch (error) {
       console.error("Error deleting post:", error);
+      alert("An error occurred while deleting the post");
     } finally {
       setIsDeleting(false);
     }
@@ -167,7 +191,7 @@ const PostCard = ({ post }) => {
           isLikeLoading={isLikeLoading}
           likeCount={likeCount}
           commentCount={commentCount}
-          isAuthor={session?.user?.id === post.user._id}
+          isAuthor={isAuthor}
         />
 
         {/* Comment Modal */}

@@ -50,7 +50,7 @@ export async function POST(request, { params }) {
     }
 
     await connectToDB();
-    const { postId } = params;
+    const { postId } = await params;
 
     // Verify the post exists
     const post = await Post.findById(postId);

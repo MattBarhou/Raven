@@ -1,7 +1,9 @@
 import { useState } from "react";
 import Image from "next/image";
+import { useSession } from "next-auth/react";
 
 const PostModal = ({ isOpen, onClose }) => {
+  const { data: session } = useSession();
   const [postText, setPostText] = useState("");
   const [files, setFiles] = useState([]);
   const [filePreviewUrls, setFilePreviewUrls] = useState([]);
@@ -23,6 +25,12 @@ const PostModal = ({ isOpen, onClose }) => {
     try {
       const formData = new FormData();
       formData.append("text", postText);
+
+      // Add the current session user information
+      if (session) {
+        formData.append("userImage", session.user.image || "");
+        formData.append("userName", session.user.name || "");
+      }
 
       // Only append files if they exist
       if (files.length > 0) {
@@ -49,11 +57,12 @@ const PostModal = ({ isOpen, onClose }) => {
       setFilePreviewUrls([]);
       onClose();
 
-      // Refresh the page to show the new post
-      window.location.reload();
+      // Create a custom event to trigger post refresh instead of reloading the page
+      const event = new Event("new-post-created");
+      window.dispatchEvent(event);
     } catch (error) {
       console.error("Error creating post:", error);
-      // You might want to show this error to the user via a toast or alert
+      alert("Error creating post: " + error.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -73,6 +82,23 @@ const PostModal = ({ isOpen, onClose }) => {
             ✕
           </button>
           <h3 className="text-lg font-bold">Create Post</h3>
+
+          {/* Show current user info */}
+          <div className="flex items-center gap-2 my-3">
+            <div className="avatar">
+              <div className="w-10 h-10 rounded-full">
+                <Image
+                  src={session?.user?.image || "/default-avatar.png"}
+                  alt={session?.user?.name || "User"}
+                  width={40}
+                  height={40}
+                  className="rounded-full"
+                />
+              </div>
+            </div>
+            <span className="font-medium">{session?.user?.name}</span>
+          </div>
+
           <form onSubmit={handleSubmit} className="mt-4">
             <textarea
               placeholder="What's on your mind?"

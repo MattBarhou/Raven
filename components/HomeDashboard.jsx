@@ -43,10 +43,10 @@ export default function HomeDashboard({ initialPosts, session }) {
       <SideNavbar refreshPosts={refreshPosts} />
 
       {/* Main Dashboard Content */}
-      <main className="flex-1 p-4">
-        <div className="max-w-2xl mx-auto">
+      <main className="flex-1 p-4 flex flex-col">
+        <div className="max-w-2xl mx-auto w-full flex-1 flex flex-col">
           {/* Posts Feed */}
-          <div className="space-y-4">
+          <div className="space-y-4 flex-1 flex flex-col">
             {posts.length > 0 ? (
               posts.map((post) => {
                 return (
@@ -62,8 +62,10 @@ export default function HomeDashboard({ initialPosts, session }) {
                 );
               })
             ) : (
-              <div className="text-center p-8 bg-base-100 rounded-box shadow">
-                <p className="text-lg">No posts yet. Be the first to post!</p>
+              <div className="flex-1 flex items-center justify-center min-h-[70vh]">
+                <div className="text-center bg-base-100 rounded-box shadow p-8 max-w-md">
+                  <p className="text-lg">No posts yet. Be the first to post!</p>
+                </div>
               </div>
             )}
           </div>
