@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  allowedDevOrigins: "raven-ibr7.onrender.com",
+  allowedDevOrigins: ["raven-ibr7.onrender.com"],
   images: {
     remotePatterns: [
       {
