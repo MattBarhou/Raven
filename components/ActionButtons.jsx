@@ -40,10 +40,6 @@ export default function ActionButtons({
             Comment {commentCount > 0 && `(${commentCount})`}
           </span>
         </button>
-        <button className="btn btn-ghost btn-sm">
-          <FaRegShareSquare className="w-5 h-5" />
-          <span className="ml-1">Share</span>
-        </button>
         {isAuthor && (
           <button
             className="btn btn-ghost btn-sm text-error"

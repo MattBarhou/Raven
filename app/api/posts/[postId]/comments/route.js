@@ -11,8 +11,6 @@ export async function GET(request, { params }) {
     await connectToDB();
     const { postId } = await params;
 
-    console.log("Fetching comments for post ID:", postId);
-
     const comments = await Comment.find({ post: postId })
       .populate({
         path: "user",
@@ -20,8 +18,6 @@ export async function GET(request, { params }) {
         select: "name email image",
       })
       .sort({ createdAt: -1 });
-
-    console.log(`Found ${comments.length} comments`);
 
     return NextResponse.json(comments);
   } catch (error) {
@@ -45,15 +41,9 @@ export async function POST(request, { params }) {
     const { postId } = await params;
     const { text } = await request.json();
 
-    console.log(
-      "Creating comment for post:",
-      postId,
-      "by user:",
-      session.user.id
-    );
-
     // Verify the post exists
     const post = await Post.findById(postId);
+
     if (!post) {
       return NextResponse.json({ error: "Post not found" }, { status: 404 });
     }

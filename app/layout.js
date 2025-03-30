@@ -3,7 +3,7 @@ import Head from "next/head";
 import "./globals.css";
 import { SessionProvider } from "next-auth/react";
 
-const quicksand = Quicksand({ weight: "600", subsets: ["latin"] });
+const quicksand = Quicksand({ weight: ["600"], subsets: ["latin"] });
 
 export const metadata = {
   title: "Raven",

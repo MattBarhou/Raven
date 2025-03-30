@@ -2,7 +2,6 @@ import NextAuth from "next-auth";
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import GitHub from "next-auth/providers/github";
 import Discord from "next-auth/providers/discord";
-import Resend from "next-auth/providers/resend";
 import client from "@/db/mongodb";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -12,10 +11,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     Discord({
       clientId: process.env.DISCORD_CLIENT_ID,
       clientSecret: process.env.DISCORD_CLIENT_SECRET,
-    }),
-    Resend({
-      apiKey: process.env.AUTH_RESEND_KEY,
-      from: process.env.EMAIL_FROM,
     }),
   ],
 
@@ -50,37 +45,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
       return session;
     },
-    async redirect({ url, baseUrl }) {
-      console.log("Redirect callback called with:", { url, baseUrl });
-
-      // Handle sign-out redirect explicitly
-      if (url === `${baseUrl}/api/auth/signout`) {
-        return `${baseUrl}/`; // Redirect to root after sign-out
-      }
-
-      // Handle email verification callback
-      if (url.includes("/api/auth/callback/resend")) {
-        return `${baseUrl}/home`;
-      }
-
-      // Handle other OAuth callbacks
-      if (url.startsWith("/api/auth/callback/")) {
-        return `${baseUrl}/home`;
-      }
-
-      // Allow relative or absolute URLs within the app
-      if (url.startsWith(baseUrl)) return url;
-
-      // Default to home page for authenticated users, root for others
-      return `${baseUrl}/`;
-    },
   },
   session: {
     strategy: "jwt",
-  },
-  pages: {
-    signIn: "/", // Use custom sign-in page
-    verifyRequest: "/auth/verify-request", // Used for check email message
   },
   basePath: "/api/auth",
   debug: true, // Keep debug logs for now to help troubleshoot

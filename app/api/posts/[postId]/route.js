@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import connectToDB from "@/db/dbConnect";
 import Post from "@/db/models/Post";
-import User from "@/db/models/User";
 import { auth } from "@/authentication/auth";
 
 // DELETE a specific post
